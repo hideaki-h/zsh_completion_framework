@@ -1,0 +1,85 @@
+#!/usr/bin/env zsh
+
+dir_name=$( cd $( dirname $0 ); pwd | sed 's/^.*\///' )
+do_name=$( basename $0 )
+work_name=${dir_name:3}
+env_path=${ZSH_COMPLETION_KIT_BASE_DIR}/etc/${work_name}.env
+[[ -f $env_path ]] && . $env_path
+
+function printUsage() {
+	echo "Usage: $do_name [args]"
+	func_sub_do_help
+}
+
+function func_sub_do() {
+	# check arguments
+	if [[ $# -ne 4 ]]; then
+		printUsage
+		exit 1
+	fi
+	
+	# set arguments to variables
+	repo_name=$1
+	branch_name=$2
+	repo_dir=$3
+	giturl=$4
+	
+	# number of repo record
+	l=$( grep "^${repo_name}\t" $GIT_REPO_LIST | wc -l )
+	
+	# check existance of repo dir 
+	if [[ ! -d $repo_dir ]]; then
+		echo "ERROR: repo dir $repo_dir not found"
+		exit 255
+	fi
+	
+	# check duplication of repo record
+	if [[ $l -ne 0 ]]; then
+		echo "ERROR: repo name $1 already registered in $GIT_REPO_LIST"
+		exit 255
+	fi
+	
+	# register repo record
+	echo "${repo_name}\t${branch_name}\t${repo_dir}\t${giturl}" >> $GIT_REPO_LIST
+	echo "registered as ${repo_name}"
+	
+	exit 0
+}
+
+function func_sub_return_completion_do_arg1() {
+		[[ $1 = "key" ]] && echo "repo name"
+		[[ $1 = "values" ]] && echo ""
+}
+function func_sub_return_completion_do_args2() {
+		[[ $1 = "key" ]] && echo "branch name"
+		[[ $1 = "values" ]] && echo ""
+}
+function func_sub_return_completion_do_args3() {
+		# repo_dir
+}
+function func_sub_return_completion_do_args4() {
+		[[ $1 = "key" ]] && echo "URL to git"
+		[[ $1 = "values" ]] && echo "https://github.com/"
+}
+# concrete function to output this method description for indirect execution(called from completion _XXX_do script/function)
+# ACTION: Update code
+#
+function func_sub_do_desc() {
+	# here output description for this do method
+	echo "register repo info to local repository list(for api ,not for user manual call)"
+}
+
+function func_sub_do_help() {
+	echo "    arg[1]: repo name"
+	echo "    arg[2]: branch name"
+	echo "    arg[3]: local path for the repository"
+	echo "    arg[4]: URL to git"
+}
+
+#export_functions='func_sub_do func_sub_do_desc func_sub_do_help func_sub_return_completion_do_arg1 func_sub_return_completion_do_arg2 func_sub_return_completion_do_arg3 func_sub_return_completion_do_arg4 func_sub_return_completion_do_arg5 func_sub_return_completion_do_arg6 func_sub_return_completion_do_arg7 func_sub_return_completion_do_arg8 func_sub_return_completion_do_arg9'
+
+export_functions='func_sub_do func_sub_do_desc func_sub_do_help func_sub_return_completion_do_arg1 func_sub_return_completion_do_arg2 func_sub_return_completion_do_arg3 func_sub_return_completion_do_arg4'
+export -f $export_functions
+. $( dirname $0 )/../.do/do.super $1 $2 $3 $4 $5 $6 $7 $8 $9
+unset $export_functions
+

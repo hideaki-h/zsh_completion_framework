@@ -1,0 +1,69 @@
+#!/usr/bin/env zsh
+
+# get work_name
+work_name=$( basename $0 )
+env_path=${ZSH_COMPLETION_FRAMEWORK_BASE_DIR}/etc/${work_name}.env
+[[ -f $env_path ]] && . $env_path
+
+
+function git-do() {
+	printUsage() {
+		echo -n "Usage: $work_name {"
+		for do in $dos; do
+			echo -n $do
+			echo -n "|"
+		done
+		echo "help} [args]"
+		
+		for do in $dos; do
+			echo "  $do args:"
+			${dir}/do.${work_name}/${do} do_help
+			echo 
+		done
+		exit 0
+	}
+	function error_norepo() {
+		echo "ERROR: $2 not found in ${GIT_REPO_LIST}"
+		rc=255
+	}
+	
+	# get dir of this script. followings can get right one whereever even in function
+	#dir=$( dirname $0 )
+	#echo $dir
+	dir=$( dirname ${(%):-%x} )
+	#echo $dir
+	
+	# get do method file names from method directory
+	dos=( $( cd ${dir}/do.${work_name}; ls ) )
+	
+	# define args as variables
+	do=$1
+	do_arg1=$2
+	do_arg2=$3
+	do_arg3=$4
+	do_arg4=$5
+	do_arg5=$6
+	do_arg6=$7
+	do_arg7=$8
+	do_arg8=$9
+	
+	# call do method file if exists do method specified
+	if [[ $dos[(re)$do] ]]; then
+		# call
+		${dir}/do.${work_name}/${do} $do_arg1 $do_arg2 $do_arg3 $do_arg4 $do_arg5 $do_arg6 $do_arg7 $do_arg8
+		rc=$?
+	# print usage if no argument
+	elif [[ $# -eq 0 ]]; then
+		printUsage
+	# notify error if not exists do method specified
+	else
+		echo "ERROR: invalid parameter"
+		rc=255
+	fi
+		
+	exit $rc
+}
+
+# call function as same as script
+git-do $@
+

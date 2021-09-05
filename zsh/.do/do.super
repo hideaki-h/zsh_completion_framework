@@ -1,0 +1,58 @@
+#!/usr/bin/env zsh
+
+function super-do() {
+	case $1 in
+		do_arg[1-9])
+			func=func_sub_return_completion_$1
+			if type $func >/dev/null 2>&1; then
+				$func $2 $3 $4 $5 $6 $7 $8 $9
+			fi
+			exit 0
+			;;
+		do_desc)
+			func=func_sub_$1
+			if type $func >/dev/null 2>&1; then
+				$func $2 $3 $4 $5 $6 $7 $8 $9
+			else
+				echo "ERROR: $func as subclass method not defined"
+				exit 255
+			fi
+			exit 0
+			;;
+		do_help)
+			func=func_sub_$1
+			if type $func >/dev/null 2>&1; then
+				$func $2 $3 $4 $5 $6 $7 $8 $9
+			else
+				echo "ERROR: $func as subclass method not defined"
+				exit 255
+			fi
+			exit 0
+			;;
+	esac
+
+	do_arg1=$1
+	do_arg2=$2
+	do_arg3=$3
+	do_arg4=$4
+	do_arg5=$5
+	do_arg6=$6
+	do_arg7=$7
+	do_arg8=$8
+	do_arg9=$9
+	
+	func=func_sub_do
+	if type $func >/dev/null 2>&1; then
+		$func $do_arg1 $do_arg2 $do_arg3 $do_arg4 $do_arg5 $do_arg6 $do_arg7 $do_arg8 $do_arg9
+		rc=$?
+	else
+		echo "ERROR: $func not defined"
+		rc=255
+	fi
+	
+	exit $rc
+}
+
+super-do $@
+
+

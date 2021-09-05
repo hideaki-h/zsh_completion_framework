@@ -1,0 +1,141 @@
+#!/usr/bin/env zsh
+
+dir_name=$( cd $( dirname $0 ); pwd | sed 's/^.*\///' )
+do_name=$( basename $0 )
+work_name=${dir_name:3}
+env_path=${ZSH_COMPLETION_KIT_BASE_DIR}/etc/${work_name}.env
+[[ -f $env_path ]] && . $env_path
+
+repo_name_candidate=$1
+
+function printUsage() {
+	echo "Usage: $do_name [args]"
+	func_sub_do_help
+}
+
+function func_sub_do() {
+	error_by_rc() {
+		rc=$1
+		repo_name=$2
+		repo_dir=$3
+		msg=$4
+		if [[ $rc -ne 0 ]]; then
+			echo "ERROR: $msg with rc=$rc. all activities will be fallbacked"
+			delete_repo_dir $repo_name $repo_dir
+			exit $rc
+		fi
+	}
+	delete_repo_dir() {
+		repo_name=$1
+		repo_dir=$2
+		parent_dir=${repo_dir:0:-${#repo_name}-1}
+		if [[ -d ${parent_dir} ]]; then
+			( cd ${parent_dir}; rm -rf $repo_name )
+		else
+			echo "ERROR: fail to delete repo dir $repo_dir for fallback"
+		fi
+	}
+		
+	
+	# check arguments
+	if [[ $# -ne 4 ]]; then
+		printUsage
+		exit 1
+	fi
+	
+	# set arguments to variables
+	repo_name=$1
+	branch_name=$2
+	repo_dir=$3
+	giturl=$4
+	
+	# number of repo reocrd
+	l=$( grep "^$1\t" $GIT_REPO_LIST | wc -l )
+	
+	# check git_repo.list
+	if [[ $l -ne 0 ]]; then
+		echo "ERROR: repo name $repo_name already exists in $GIT_REPO_LIST"
+		exit 255
+	fi
+	
+	# check parameters
+	if [[ -d $repo_dir ]]; then
+		echo "ERROR: repo dir $repo_dir already exists"
+		exit 255
+	fi
+	if [[ ! ${repo_dir} =~ ${repo_name}$ ]]; then
+		echo "ERROR: last repo dir name MUST be equal to repo name $repo_name"
+		exit 255
+	fi
+	
+	# perform create dir and git init
+	( mkdir $repo_dir; cd $repo_dir; git init )
+	rc=$?
+	error_by_rc $rc $repo_name $repo_dir "git init failed"
+	
+	# add remote repository if git init succeeded
+	( cd $repo_dir; git remote add origin $giturl )
+	rc=$?
+	error_by_rc $rc $repo_name $repo_dir "git remote add origin failed"
+	
+	# check branch name if git remote add origin succeeded
+	sz_branche_names=( $( cd $repo_dir ; git branch | sed 's/^*/ /' | tr -d ' ' ) )
+	rc=$?
+	error_by_rc $rc $repo_name $repo_dir "git remote add origin failed"
+	if [[ ! ${sz_branch_names[(re)$branch_name]} ]]; then
+		echo "ERROR: branch name $branch_name not prepared in $giturl. all activites will be fallbacked"
+		delete_repo_dir $repo_name $repo_dir
+		exit 255
+	fi
+		
+	# register repository information if all succeeded
+	$work_name register $repo_name $branch_name $repo_dir $giturl
+	
+	exit 0
+}
+
+function func_sub_return_completion_do_arg1() {
+		[[ $1 = "key" ]] && echo "repo name"
+		sz_repo_names=( $( cat $GIT_REPO_LIST | grep -v '^#' | grep -v '^$' | cut -f1 ) )
+		repo_names="$( IFS=' '; echo "${sz_repo_names[*]}" )"
+		[[ $1 = "values" ]] && echo $repo_names
+}
+function func_sub_return_completion_do_args2() {
+		[[ $1 = "key" ]] && echo "branch_name"
+		repo_dir=$( cat $GIT_REPO_LIST | grep "^$repo_name_candidate\t" | cut -f3 | head -n 1 )
+		branch_names=""
+		if [[ -d $repo_dir ]]; then
+			sz_branche_names=( $( cd $repo_dir ; git branch | sed 's/^*/ /' | tr -d ' ' ) )
+			branch_names="$( IFS=' '; echo "${sz_baranches[*]}" )"
+		fi
+		[[ $1 = "values" ]] && echo $branch_names
+}
+function func_sub_return_completion_do_args3() {
+		# repo_dir
+}
+function func_sub_return_completion_do_args4() {
+		[[ $1 = "key" ]] && echo "URL to git"
+		[[ $1 = "values" ]] && echo "https://github.com/"
+}
+# concrete function to output this method description for indirect execution(called from completion _XXX_do script/function)
+# ACTION: Update code
+#
+function func_sub_do_desc() {
+	# here output description for this do method
+	echo "create local repository and let it belong to remote repository"
+}
+
+function func_sub_do_help() {
+		echo "    arg[1]: repo name"
+		echo "    arg[2]: branch name"
+		echo "    arg[3]: local dir for the repository"
+		echo "    arg[4]: URL to git"
+}
+
+#export_functions='func_sub_do func_sub_do_desc func_sub_do_help func_sub_return_completion_do_arg1 func_sub_return_completion_do_arg2 func_sub_return_completion_do_arg3 func_sub_return_completion_do_arg4 func_sub_return_completion_do_arg5 func_sub_return_completion_do_arg6 func_sub_return_completion_do_arg7 func_sub_return_completion_do_arg8 func_sub_return_completion_do_arg9'
+
+export_functions='func_sub_do func_sub_do_desc func_sub_do_help func_sub_return_completion_do_arg1 func_sub_return_completion_do_arg2 func_sub_return_completion_do_arg3 func_sub_return_completion_do_arg4'
+export -f $export_functions
+. $( dirname $0 )/../.do/do.super $1 $2 $3 $4 $5 $6 $7 $8 $9
+unset $export_functions
+

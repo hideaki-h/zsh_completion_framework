@@ -1,0 +1,74 @@
+#compdef git-do
+
+function _git-do() {
+	#
+	# SHARED SETTING FOR ZSH_COMPLETION_KIT
+	#
+	## get work_name from this file name by deleting fist "_"
+	local -a prog_name
+	prog_name=$( basename $0 )
+	local -a work_name
+	work_name=${prog_name:1}
+	
+	## dim do methods
+	local -a dos
+	dos=( $( ( cd ${ZSH_COMPLETION_KIT_BIN_DIR}/do.${work_name}/ ; ls ) ) )
+	
+	#
+	# Here UNIQUE SETTING
+	#
+	local -a repo_list
+	repo_list=~/etc/git_repo.list
+	local -a repos
+	repos=( $(cat ${repo_list} | grep -v '^#' | grep -v '^$' | cut -f1 | sort | uniq) )
+	#repos=( ${(uf)"$(cat ${repo_list} | grep -v ^# | grep -v ^$ | cut -f1 | sort | uniq)"} )
+	
+	#
+	# start of completion
+	#
+	## get do method specified in commandline
+	local -a do
+	do=$( echo $BUFFER | awk '{print $2}' )
+	
+	## set argument name
+	_arguments '1: :->do' '2: :->do_arg1' '3: :->do_arg2' '4: :->do_arg3' '5: :->do_arg4' '6: :->do_arg5' '7: :->do_arg6' '8: :->do_arg7' '9: :->do_arg8'
+	
+	## case target argument name
+	case "$state" in
+		### do argument
+		do)
+			local -a values
+			values=()
+			local -a d
+			for d in $dos; do
+				values=( $values[*] "${d}" )
+				#values=( $values[*] "${d}[$( ${ZSH_COMPLETION_KIT_BIN_DIR/do.${work_name/${d} do_desc )]" )
+			done
+			_values $state $values
+			;;
+		### do_argX argument
+		do_arg[1-9])
+			### set compeltion key and values if do method specified is valid
+			if [[ $dos[(re)$do] ]]; then
+				#### get key from do method file
+				local -a key
+				key=$( ${ZSH_COMPLETION_KIT_BIN_DIR}/do.${work_name}/${do} $state key )
+				#### get value from do method file
+				local -a values
+				values=( $( ${ZSH_COMPLETION_KIT_BIN_DIR}/do.${work_name}/${do} $state values ) )
+				#### set completion parameters if key is valid
+				if [[ $key != "" ]]; then
+					##### set completion values if values is valid
+					if [[ $values != "" ]]; then
+						_values $key $values
+					#else
+					#	_values $key ''
+					fi
+				fi
+			fi
+			;;
+	esac
+}
+
+compdef _git-do git-do
+
