@@ -49,7 +49,7 @@ Concrete script has several callback functions called by "XXX-do" and "_XXX-do".
 
 ## install(file allocation)
 
-## environmental variable setting
+## setting of environmental variables
 |variable|||
 |-|-|-|
 |ZSH_COMPLETION_FRAMEWORK_BIN_DIR|(mandatory)directory path where do.XXX-do is located||
