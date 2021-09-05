@@ -9,7 +9,7 @@ git-do scripts is front-end of git to serve the follows.
 - create: create local repository and attach to remote repository
 - push: push local repository to remote repository
 
-# architecture
+# Architecture
 User infetface of scripts is focused to only one "XXX-do" script.
 By first argument of the script indicated(I call it as "DO"), concrete script/function will be called.
 each of "DO" is associated to one concrete script and name of the script is as same as "DO".
