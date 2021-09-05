@@ -1,4 +1,4 @@
-# Overview of zsh_completion_framework
+# Overview
 zsh_completion_framework is a helpful framework to make scripts with completion.
 It's based on object-oriented-like framework and developer just codes some concrete core functions.
 As the result scirpts with completion are achieved.
