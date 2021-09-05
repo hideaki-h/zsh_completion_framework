@@ -24,16 +24,17 @@ Concrete script has several callback functions called by "XXX-do" and "_XXX-do".
 - func_sub_do_help: return arguments information for user
 
 ## file structure
-+/
- + XXX-do
- + functions
- | + _XXX-do
- + do.XXX-do
- | + do1
- | + do2
- | ...
- + .do
- + + do.super
+    +/
+     + XXX-do
+     + functions
+     | + _XXX-do
+     + do.XXX-do
+     | + do1
+     | + do2
+     | ...
+     + .do
+     + + do.super
+
 
 |file|role|
 |-|-|
